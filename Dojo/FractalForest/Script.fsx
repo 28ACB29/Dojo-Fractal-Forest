@@ -3,7 +3,7 @@ open System.Drawing
 open System.Windows.Forms
 
 // Create a form to display the graphics
-let width, height = 500, 500         
+let (width, height) = (500, 500)
 let form = new Form(Width = width, Height = height)
 let box = new PictureBox(BackColor = Color.White, Dock = DockStyle.Fill)
 let image = new Bitmap(width, height)
@@ -30,9 +30,7 @@ let flip x = (float)height - x
 // Utility function: draw a line of given width, 
 // starting from x, y
 // going at a certain angle, for a certain length.
-let drawLine (target : Graphics) (brush : Brush) 
-             (x : float) (y : float) 
-             (angle : float) (length : float) (width : float) =
+let drawLine (target : Graphics) (brush : Brush) (x : float) (y : float) (angle : float) (length : float) (width : float) =
     let x_end, y_end = endpoint x y angle length
     let origin = new PointF((single)x, (single)(y |> flip))
     let destination = new PointF((single)x_end, (single)(y_end |> flip))
@@ -44,16 +42,29 @@ let draw x y angle length width =
 
 let pi = Math.PI
 
+let (startX, startY) = (250.0, 50.0)
+let startAngle = pi * 0.5
+let (startLength, startWidth) = (100.0, 4.0)
+let leftAngle = pi * 0.3
+let rightAngle = -pi * 0.4
+let scaleFactor = 0.5
+let iterations = 10
 // Now... your turn to draw
-// The trunk
-draw 250. 50. (pi*(0.5)) 100. 4.
-let x, y = endpoint 250. 50. (pi*(0.5)) 100.
-// first and second branches
-draw x y (pi*(0.5 + 0.3)) 50. 2.
-draw x y (pi*(0.5 - 0.4)) 50. 2.
-
+let rec drawTree x y angle length width leftAngle rightAngle scaleFactor height =
+    if height > 0 then
+        // The trunk
+        draw x y angle length width
+        let (branchX, branchY) = endpoint x y angle length
+        let (branchLength, branchWidth) = (scaleFactor * length, scaleFactor * width)
+        // left and right branches
+        draw branchX branchY (angle + leftAngle) branchLength branchWidth
+        draw branchX branchY (angle + rightAngle) branchLength branchWidth
+        drawTree branchX branchY (angle + leftAngle) branchLength branchWidth leftAngle rightAngle scaleFactor (height - 1)
+        drawTree branchX branchY (angle + rightAngle) branchLength branchWidth leftAngle rightAngle scaleFactor (height - 1)
+    else
+        ignore()
+drawTree startX startY startAngle startLength startWidth leftAngle rightAngle scaleFactor iterations
 form.ShowDialog()
-
 (* To do a nice fractal tree, using recursion is
 probably a good idea. The following link might
 come in handy if you have never used recursion in F#:
